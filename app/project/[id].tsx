@@ -1,12 +1,18 @@
+import { AudioPlayerModal } from '@/components/AudioPlayerModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
+import { OFFICIAL_VOICES, useSettings } from '@/context/SettingsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { synthesizeInworldSpeech } from '@/services/tts-service';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Animated,
     KeyboardAvoidingView,
     Platform,
@@ -23,12 +29,18 @@ function ProjectScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
     const insets = useSafeAreaInsets();
+    const { user } = useAuth();
+    const { selectedVoiceId } = useSettings();
 
     const [text, setText] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [audioUri, setAudioUri] = useState<string | null>(null);
+    const [showPlayer, setShowPlayer] = useState(false);
+
     const settingsScale = useRef(new Animated.Value(1)).current;
 
     const displayName = String(name || 'Project Details');
+    const selectedVoice = OFFICIAL_VOICES.find(v => v.id === selectedVoiceId) || OFFICIAL_VOICES[0];
 
     const handleSettingsPress = () => {
         Animated.sequence([
@@ -45,6 +57,29 @@ function ProjectScreen() {
         ]).start(() => {
             router.push('/voice-settings');
         });
+    };
+
+    const handleGenerate = async () => {
+        if (!text) return;
+
+        setIsGenerating(true);
+        try {
+            const audioBase64 = await synthesizeInworldSpeech(text, selectedVoice.id);
+
+            const fileUri = `${FileSystem.cacheDirectory}tts_project_${id}.mp3`;
+            await FileSystem.writeAsStringAsync(fileUri, audioBase64, {
+                encoding: 'base64' as any,
+            });
+
+            setAudioUri(`${fileUri}?t=${Date.now()}`);
+            setShowPlayer(true);
+
+        } catch (error: any) {
+            console.error("Generation error:", error);
+            Alert.alert("Error", error.message || "Failed to generate speech.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -95,15 +130,17 @@ function ProjectScreen() {
                         selectionColor={theme.primary}
                     />
                     <View style={styles.counterContainer}>
+                        {audioUri && (
+                            <Pressable onPress={() => setShowPlayer(true)} style={{ marginRight: 12 }}>
+                                <IconSymbol name="play.circle.fill" color={theme.primary} size={20} />
+                            </Pressable>
+                        )}
                         <ThemedText style={[styles.counterText, { color: theme.muted }]}>
-                            {text.length.toLocaleString()} characters
+                            {text.length.toLocaleString()} characters • {selectedVoice.name}
                         </ThemedText>
                     </View>
                 </View>
 
-
-
-                {/* Optimized Bottom Nav Bar for Perfect Vertical Centering */}
                 <View
                     style={[
                         styles.bottomNavBar,
@@ -125,11 +162,7 @@ function ProjectScreen() {
                                     { backgroundColor: theme.primary },
                                     (!text || isGenerating) && { opacity: 0.6 }
                                 ]}
-                                onPress={() => {
-                                    if (!text) return;
-                                    setIsGenerating(true);
-                                    setTimeout(() => setIsGenerating(false), 2000);
-                                }}
+                                onPress={handleGenerate}
                                 disabled={!text || isGenerating}
                             >
                                 {isGenerating ? (
@@ -148,10 +181,16 @@ function ProjectScreen() {
                             <ThemedText style={styles.navLabel} colorName="muted">History</ThemedText>
                         </Pressable>
                     </View>
-                    {/* Safe Area Spacer to push content away from Android/iOS system bars */}
                     <View style={{ height: Math.max(insets.bottom, 12) }} />
                 </View>
             </KeyboardAvoidingView>
+
+            <AudioPlayerModal
+                visible={showPlayer}
+                onClose={() => setShowPlayer(false)}
+                audioSource={audioUri}
+                voiceName={selectedVoice.name}
+            />
         </ThemedView>
     );
 }
@@ -268,12 +307,13 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '700',
     },
-
     counterContainer: {
         position: 'absolute',
         bottom: 12,
         right: 20,
         backgroundColor: 'transparent',
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     counterText: {
         fontSize: 12,

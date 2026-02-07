@@ -82,7 +82,7 @@ function RootLayoutNav() {
           options={{
             presentation: 'modal',
             animation: 'slide_from_bottom',
-            headerShown: true,
+            headerShown: false,
           }}
         />
         <Stack.Screen
@@ -97,11 +97,15 @@ function RootLayoutNav() {
   );
 }
 
+import { SettingsProvider } from '@/context/SettingsContext';
+
 export default function RootLayout() {
   return (
     <AppThemeProvider>
       <AuthProvider>
-        <RootLayoutNav />
+        <SettingsProvider>
+          <RootLayoutNav />
+        </SettingsProvider>
       </AuthProvider>
     </AppThemeProvider>
   );
