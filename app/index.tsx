@@ -4,6 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { APPWRITE_CONFIG } from '@/constants/appwrite';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { databases } from '@/lib/appwrite';
 import { Image } from 'expo-image';
@@ -82,6 +83,7 @@ export default function HomeScreen() {
     const theme = Colors[colorScheme];
     const router = useRouter();
     const { logout, user } = useAuth();
+    const { themeMode, setThemeMode } = useTheme();
     const [projects, setProjects] = useState<any[]>([]);
     const [isProjectsLoading, setIsProjectsLoading] = useState(true);
     const [showAccountModal, setShowAccountModal] = useState(false);
@@ -346,6 +348,32 @@ export default function HomeScreen() {
                                     <ThemedText style={{ flex: 1 }}>Settings</ThemedText>
                                     <IconSymbol name="chevron.right" color={theme.muted} size={14} />
                                 </Pressable>
+
+                                <Pressable
+                                    style={styles.modalMenuItem}
+                                    android_ripple={{ color: theme.primary + '10' }}
+                                    onPress={() => {
+                                        const nextMode = themeMode === 'light' ? 'dark' : themeMode === 'dark' ? 'system' : 'light';
+                                        setThemeMode(nextMode);
+                                    }}
+                                >
+                                    <IconSymbol
+                                        name={themeMode === 'light' ? 'sun.max.fill' : themeMode === 'dark' ? 'moon.fill' : 'circle.lefthalf.filled'}
+                                        color={theme.primary}
+                                        size={20}
+                                    />
+                                    <View style={{ flex: 1 }}>
+                                        <ThemedText>Appearance</ThemedText>
+                                        <ThemedText type="small" colorName="muted">
+                                            {themeMode === 'light' ? 'Light Mode' : themeMode === 'dark' ? 'Dark Mode' : 'System Default'}
+                                        </ThemedText>
+                                    </View>
+                                    <View style={[styles.themeTag, { backgroundColor: theme.primary + '15' }]}>
+                                        <IconSymbol name="sparkles" color={theme.primary} size={12} />
+                                        <ThemedText type="small" style={{ color: theme.primary, fontWeight: '700', fontSize: 10 }}>NEW</ThemedText>
+                                    </View>
+                                </Pressable>
+
                                 <Pressable style={styles.modalMenuItem} android_ripple={{ color: theme.primary + '10' }}>
                                     <IconSymbol name="questionmark.circle.fill" color={theme.primary} size={20} />
                                     <ThemedText style={{ flex: 1 }}>Help & Support</ThemedText>
@@ -639,5 +667,13 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         gap: 8,
         borderRadius: 16,
+    },
+    themeTag: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     }
 });

@@ -39,6 +39,9 @@ const MAPPING = {
   'plus': 'add',
   'magnifyingglass': 'search',
   'trash.fill': 'delete-outline',
+  'sun.max.fill': 'light-mode',
+  'moon.fill': 'dark-mode',
+  'circle.lefthalf.filled': 'brightness-6',
 } as IconMapping;
 
 /**

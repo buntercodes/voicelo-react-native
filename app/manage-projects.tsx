@@ -6,7 +6,7 @@ import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { databases } from '@/lib/appwrite';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -154,16 +154,23 @@ export default function ManageProjectsScreen() {
     );
 
     return (
-        <ThemedView style={styles.container}>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Manage Projects',
-                    headerLargeTitle: true,
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: theme.background },
-                    headerTintColor: theme.text,
-                }}
-            />
+        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+            <View style={styles.header}>
+                <View style={styles.headerTitleContainer}>
+                    <Pressable
+                        onPress={() => router.back()}
+                        style={({ pressed }) => [
+                            styles.backButton,
+                            { backgroundColor: theme.secondary },
+                            pressed && { opacity: 0.7, scale: 0.95 }
+                        ]}
+                        android_ripple={{ color: theme.text + '20', borderless: true }}
+                    >
+                        <IconSymbol name="chevron.left" color={theme.text} size={20} />
+                    </Pressable>
+                    <ThemedText style={styles.headerTitle}>Manage Projects</ThemedText>
+                </View>
+            </View>
 
             <View style={[styles.searchContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <IconSymbol name="magnifyingglass" color={theme.muted} size={18} />
@@ -218,6 +225,30 @@ export default function ManageProjectsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 8,
+        paddingTop: 4,
+    },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    backButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
     },
     centerContainer: {
         flex: 1,

@@ -1,18 +1,28 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { Colors } from '@/constants/theme';
+
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ThemeProvider as AppThemeProvider } from '@/context/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme];
   const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    // Set system background color to prevent white blinks during transitions
+    SystemUI.setBackgroundColorAsync(theme.background);
+  }, [theme.background]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -37,8 +47,17 @@ function RootLayoutNav() {
     );
   }
 
+  const navigationTheme = {
+    ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
+      background: theme.background,
+      card: theme.background,
+    },
+  };
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme}>
       <Stack
         screenOptions={{
           animation: 'slide_from_right',
@@ -46,6 +65,7 @@ function RootLayoutNav() {
           headerShown: false,
           gestureEnabled: true,
           fullScreenGestureEnabled: true,
+          contentStyle: { backgroundColor: theme.background },
         }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
@@ -53,9 +73,7 @@ function RootLayoutNav() {
           name="project/[id]"
           options={{
             animation: 'slide_from_right',
-            headerShown: true,
-            headerShadowVisible: false,
-            headerBackTitle: '',
+            headerShown: false,
           }}
         />
         <Stack.Screen name="modal" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
@@ -70,23 +88,21 @@ function RootLayoutNav() {
         <Stack.Screen
           name="manage-projects"
           options={{
-            headerShown: true,
-            headerTitle: 'Manage Projects',
-            headerLargeTitle: true,
-            headerShadowVisible: false,
-            headerBackTitle: '',
+            headerShown: false,
           }}
         />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <AppThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </AppThemeProvider>
   );
 }

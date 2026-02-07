@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -48,41 +48,35 @@ function ProjectScreen() {
     };
 
     return (
-        <ThemedView style={styles.container}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => (
-                        <View style={{
-                            marginLeft: Platform.OS === 'android' ? -20 : 0,
-                            flex: 1,
-                            marginRight: 10
-                        }}>
-                            <ThemedText
-                                style={{ fontSize: 18, fontWeight: '700', color: theme.text }}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
-                                {displayName}
-                            </ThemedText>
-                        </View>
-                    ),
-                    headerStyle: { backgroundColor: theme.background },
-                    headerTintColor: theme.text,
-                    headerTitleAlign: Platform.OS === 'android' ? 'left' : 'center',
-                    headerRight: () => (
-                        <Pressable
-                            onPress={() => { }}
-                            style={({ pressed }) => [
-                                styles.headerBtn,
-                                { backgroundColor: theme.primary + (pressed ? '25' : '15') }
-                            ]}
-                        >
-                            <IconSymbol name="doc.text" size={14} color={theme.primary} />
-                            <ThemedText style={[styles.headerBtnText, { color: theme.primary }]}>Import</ThemedText>
-                        </Pressable>
-                    ),
-                }}
-            />
+        <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+            <View style={styles.header}>
+                <View style={styles.headerTitleContainer}>
+                    <Pressable
+                        onPress={() => router.back()}
+                        style={({ pressed }) => [
+                            styles.backButton,
+                            { backgroundColor: theme.secondary },
+                            pressed && { opacity: 0.7, scale: 0.95 }
+                        ]}
+                        android_ripple={{ color: theme.text + '20', borderless: true }}
+                    >
+                        <IconSymbol name="chevron.left" color={theme.text} size={20} />
+                    </Pressable>
+                    <ThemedText style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+                        {displayName}
+                    </ThemedText>
+                </View>
+                <Pressable
+                    onPress={() => { }}
+                    style={({ pressed }) => [
+                        styles.headerBtn,
+                        { backgroundColor: theme.primary + (pressed ? '25' : '15') }
+                    ]}
+                >
+                    <IconSymbol name="doc.text" size={14} color={theme.primary} />
+                    <ThemedText style={[styles.headerBtnText, { color: theme.primary }]}>Import</ThemedText>
+                </Pressable>
+            </View>
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -166,6 +160,33 @@ export default ProjectScreen;
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 8,
+        paddingTop: 4,
+    },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        flex: 1,
+        marginRight: 12,
+    },
+    backButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
         flex: 1,
     },
     editorArea: {
